@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DFA and NFA to DFA Simulators</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #e9ecef;
+            font-family: Arial, sans-serif;
+        }
+        header {
+            background: linear-gradient(90deg, #0066cc, #003399);
+            color: white;
+            padding: 1.5rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        header h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        .container {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            font-weight: bold;
+            color: #003399;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            font-weight: bold;
+            color: #003366;
+        }
+        .form-control {
+            border-radius: 5px;
+        }
+        button {
+            border-radius: 5px;
+            font-weight: bold;
+            background: #003399;
+            color: white;
+            transition: background 0.3s ease;
+        }
+        button:hover {
+            background: #0052cc;
+        }
+        table {
+            margin-top: 1rem;
+        }
+        table th {
+            background-color: #f2f4f8;
+            font-weight: bold;
+        }
+        table td, table th {
+            text-align: center;
+        }
+        .graph img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        #result{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>DFA and NFA to DFA Simulators</h1>
+    </header>
+    <div class="container">
+        <!-- Navigation Buttons -->
+        <div class="d-flex justify-content-center mb-4">
+            <button class="btn btn-primary me-2" id="showDFA">DFA Simulator</button>
+            <button class="btn btn-primary" id="showNFAToDFA">NFA to DFA Simulator</button>
+        </div>
+
+        <!-- DFA Simulator Section -->
+        <div id="dfaSimulator" style="display: none;">
+            <h2>DFA Simulator</h2>
+            <form id="dfaForm">
+                <label for="num_states" class="form-label">Number of States:</label>
+                <input type="number" id="num_states" name="num_states" class="form-control" required>
+
+                <label for="initial_state" class="form-label">Initial State:</label>
+                <input type="text" id="initial_state" name="initial_state" class="form-control" required>
+
+                <label for="final_states" class="form-label">Final States (comma-separated):</label>
+                <input type="text" id="final_states" name="final_states" class="form-control" required>
+
+                <label for="transitions" class="form-label">Transitions (format: state,input=next_state):</label>
+                <textarea id="transitions" name="transitions" class="form-control" rows="4" required></textarea>
+
+                <label for="test_string" class="form-label">Test String:</label>
+                <input type="text" id="test_string" name="test_string" class="form-control" required>
+
+                <button type="submit" class="btn btn-primary w-100" onclick="showRes()">Simulate</button>
+            </form>
+
+            <div id="result" class="mt-5">
+                <h3 class="text-success text-center">Simulation Result</h3>
+                <pre id="simulationResult" class="bg-light p-3 rounded"></pre>
+                <div class="graph mt-4">
+                    <h4>DFA Graph</h4>
+                    <img id="dfaGraph" src="" alt="DFA Graph will appear here">
+                </div>
+            </div>
+        </div>
+
+        <!-- NFA to DFA Simulator Section -->
+        <div id="nfaToDfaSimulator" style="display: none;">
+            <h2>NFA to DFA Simulator</h2>
+            <form id="nfaForm">
+                <div class="mb-4">
+                    <label for="start_state" class="form-label">Start State</label>
+                    <input type="text" id="start_state" class="form-control" placeholder="Enter start state (e.g., q0)" required>
+                </div>
+                <div class="mb-4">
+                    <label for="final_states" class="form-label">Final States</label>
+                    <input type="text" id="final_states_nfa" class="form-control" placeholder="Enter final states (comma-separated, e.g., q2,q3)" required>
+                </div>
+                <div class="mb-4">
+                    <label for="transitions" class="form-label">Transitions</label>
+                    <textarea id="transitions_nfa" class="form-control" placeholder="e.g., q0,a=q1,q2; q1,b=q3" rows="4" required></textarea>
+                    <small class="form-text text-muted">Format: <code>state,input=next_states</code></small>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Convert to DFA</button>
+            </form>
+
+            <div id="nfaDfaResult" class="mt-5" style="display: none;">
+                <h3 class="text-success text-center">Conversion Result</h3>
+                <div id="dfa_transitions" class="mt-4"></div>
+                <div class="graph mt-4" id="dfa_graph"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const showRes=()=>{
+            document.querySelector("#result").style.display='block';
+        }
+        // JavaScript to toggle between sections
+        const dfaSimulator = document.getElementById('dfaSimulator');
+        const nfaToDfaSimulator = document.getElementById('nfaToDfaSimulator');
+
+        document.getElementById('showDFA').addEventListener('click', () => {
+            dfaSimulator.style.display = 'block';
+            nfaToDfaSimulator.style.display = 'none';
+        });
+
+        document.getElementById('showNFAToDFA').addEventListener('click', () => {
+            dfaSimulator.style.display = 'none';
+            nfaToDfaSimulator.style.display = 'block';
+        });
+
+        // Default view: Show NFA to DFA Simulator
+        // dfaSimulator.style.display='block';
+        nfaToDfaSimulator.style.display = 'block';
+        
+        // DFA Form submission
+        document.getElementById('dfaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+        
+            const formData = {
+                num_states: document.getElementById('num_states').value,
+                initial_state: document.getElementById('initial_state').value,
+                final_states: document.getElementById('final_states').value,
+                transitions: document.getElementById('transitions').value,
+                test_string: document.getElementById('test_string').value
+            };
+
+            fetch('/simulate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('simulationResult').textContent = JSON.stringify(data.simulation, null, 2);
+
+                if (data.dfa_graph) {
+                    document.getElementById('dfaGraph').src = "data:image/png;base64," + data.dfa_graph;
+                } else {
+                    document.getElementById('dfaGraph').src = "";
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        // NFA to DFA Form submission
+        document.getElementById('nfaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = {
+                start_state: document.getElementById('start_state').value,
+                final_states: document.getElementById('final_states_nfa').value,
+                transitions: document.getElementById('transitions_nfa').value
+            };
+
+            fetch('/convert-to-dfa', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('nfaDfaResult').style.display = 'block';
+                document.getElementById('dfa_transitions').textContent = JSON.stringify(data.dfa_transitions, null, 2);
+                if (data.dfa_graph) {
+                    document.getElementById('dfa_graph').innerHTML = `<img src="data:image/png;base64,${data.dfa_graph}" alt="DFA Graph">`;
+                } else {
+                    document.getElementById('dfa_graph').innerHTML = "";
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
