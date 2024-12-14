@@ -415,4 +415,4 @@ def index():
 #     return render_template('dfa.html')
 
 if __name__ == "__main__":
-    app.run(debug=True, threaded=True, port=8080)
+    app.run(debug=False, threaded=True, host='0.0.0.0')
