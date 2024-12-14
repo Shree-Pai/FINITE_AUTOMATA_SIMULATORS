@@ -81,6 +81,11 @@ def generate_dfa_table(dfa):
         table.append(row)
     return headers, table
 
+import networkx as nx
+import matplotlib.pyplot as plt
+import io
+import base64
+
 def generate_dfa_graph(dfa):
     try:
         G = nx.DiGraph()
@@ -88,6 +93,7 @@ def generate_dfa_graph(dfa):
         start_state = dfa["start_state"]
         final_states = dfa["final_states"]
 
+        # Add nodes with colors
         for source_set, transitions_dict in transitions.items():
             source_label = ",".join(sorted(source_set))
             if source_set == start_state:
@@ -97,21 +103,45 @@ def generate_dfa_graph(dfa):
             else:
                 color = 'lightblue'
             G.add_node(source_label, color=color)
+            
+            # Add edges with labels
             for input_char, dest_set in transitions_dict.items():
                 dest_label = ",".join(sorted(dest_set))
                 G.add_edge(source_label, dest_label, label=input_char)
 
+        # Plot the DFA diagram
         plt.figure(figsize=(12, 10))
         pos = nx.spring_layout(G, k=0.9, iterations=50, seed=42)
         node_colors = [G.nodes[node]['color'] for node in G.nodes()]
-        nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=3000, alpha=0.9)
+
+        # Draw edges first
         nx.draw_networkx_edges(G, pos, edge_color='gray', arrows=True, arrowsize=30, width=2, connectionstyle='arc3,rad=0.1')
+        
+        # Draw nodes with appropriate coloring
+        nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=3000, alpha=0.9)
+
+        # Add double circles for final states
+        for final_set in final_states:
+            final_label = ",".join(sorted(final_set))
+            if final_label in pos:
+                nx.draw_networkx_nodes(
+                    G, pos, nodelist=[final_label],
+                    node_size=3200, node_color='none', edgecolors='black', linewidths=2  # Outer circle
+                )
+                nx.draw_networkx_nodes(
+                    G, pos, nodelist=[final_label],
+                    node_size=3000, node_color='salmon', edgecolors='black', linewidths=2  # Inner circle
+                )
+
+        # Draw labels
         nx.draw_networkx_labels(G, pos, font_size=14, font_weight="bold", font_color='black')
         edge_labels = nx.get_edge_attributes(G, 'label')
         nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=12, font_weight="bold", font_color='blue')
+        
         plt.title("DFA State Transition Diagram", fontsize=20, fontweight="bold")
         plt.axis('off')
 
+        # Save the graph as an image
         buffer = io.BytesIO()
         plt.savefig(buffer, format='png', bbox_inches='tight', dpi=300)
         buffer.seek(0)
@@ -122,6 +152,7 @@ def generate_dfa_graph(dfa):
     except Exception as e:
         print(f"DFA graph generation error: {e}")
         return None
+
 
 @app.route("/convert-to-dfa", methods=["POST"])
 def convert_to_dfa():
@@ -251,9 +282,14 @@ def simulate_dfsm(num_states, initial_state, final_states, transitions, test_str
             "steps": []
         }
 
+import networkx as nx
+import matplotlib.pyplot as plt
+import io
+import base64
+
 def generate_dfa_graph2(initial_state, final_states, transitions):
     """
-    Generate a graphical representation of the DFA.
+    Generate a graphical representation of the DFA with double circles for final states.
     """
     try:
         G = nx.DiGraph()
@@ -292,13 +328,31 @@ def generate_dfa_graph2(initial_state, final_states, transitions):
         plt.figure(figsize=(12, 10))
         pos = nx.spring_layout(G, seed=42)
 
-        # Draw nodes with appropriate size and color
-        node_colors = [G.nodes[node]["color"] for node in G.nodes()]
-        nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=3000, alpha=0.9)
+        # Draw edges first
         nx.draw_networkx_edges(
             G, pos, edge_color="gray", arrows=True, arrowsize=20, width=2, connectionstyle="arc3,rad=0.1"
         )
+
+        # Draw nodes with appropriate size and color
+        node_colors = [G.nodes[node]["color"] for node in G.nodes()]
+        nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=3000, alpha=0.9)
+        
+        # Draw double circles for final states
+        for state in final_states:
+            if state in pos:  # Ensure the state exists in the graph
+                nx.draw_networkx_nodes(
+                    G, pos, nodelist=[state],
+                    node_size=3200, node_color='none', edgecolors='black', linewidths=2  # Outer circle
+                )
+                nx.draw_networkx_nodes(
+                    G, pos, nodelist=[state],
+                    node_size=3000, node_color='lightblue', edgecolors='black', linewidths=2  # Inner circle
+                )
+
+        # Draw node labels
         nx.draw_networkx_labels(G, pos, font_size=14, font_weight="bold", font_color="black")
+        
+        # Draw edge labels
         edge_labels = nx.get_edge_attributes(G, "label")
         nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=12, font_color="blue")
 
@@ -315,6 +369,7 @@ def generate_dfa_graph2(initial_state, final_states, transitions):
     except Exception as e:
         print(f"DFA graph generation error: {e}")
         return None
+
 
 @app.route("/simulate", methods=["POST"])
 def simulate():
@@ -361,4 +416,3 @@ def index():
 
 if __name__ == "__main__":
     app.run(debug=True, threaded=True, port=8080)
-
